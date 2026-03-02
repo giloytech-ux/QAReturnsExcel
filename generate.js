@@ -120,19 +120,19 @@ function buildLookupsSheet(wb) {
 
   ws.getCell("A1").value = "Routes";
   ROUTES.forEach((r, i) => ws.getCell(i + 2, 1).value = r);
-  wb.definedNames.addEx({ name: "Routes", ranges: [`Lookups!$A$2:$A$${ROUTES.length + 1}`] });
+  wb.definedNames.add(`Lookups!$A$2:$A$${ROUTES.length + 1}`, "Routes");
 
   ws.getCell("B1").value = "Categories";
   CATEGORIES.forEach((c, i) => ws.getCell(i + 2, 2).value = c);
-  wb.definedNames.addEx({ name: "Categories", ranges: [`Lookups!$B$2:$B$${CATEGORIES.length + 1}`] });
+  wb.definedNames.add(`Lookups!$B$2:$B$${CATEGORIES.length + 1}`, "Categories");
 
   ws.getCell("C1").value = "Descriptions";
   DESCRIPTIONS.forEach((d, i) => ws.getCell(i + 2, 3).value = d);
-  wb.definedNames.addEx({ name: "Descriptions", ranges: [`Lookups!$C$2:$C$${DESCRIPTIONS.length + 1}`] });
+  wb.definedNames.add(`Lookups!$C$2:$C$${DESCRIPTIONS.length + 1}`, "Descriptions");
 
   ws.getCell("D1").value = "Users";
   USERS.forEach((u, i) => ws.getCell(i + 2, 4).value = u);
-  wb.definedNames.addEx({ name: "Users", ranges: [`Lookups!$D$2:$D$${USERS.length + 1}`] });
+  wb.definedNames.add(`Lookups!$D$2:$D$${USERS.length + 1}`, "Users");
 
   let col = 5;
   for (const route of ROUTES) {
@@ -141,7 +141,7 @@ function buildLookupsSheet(wb) {
     const areas = AREAS_BY_ROUTE[route];
     areas.forEach((a, i) => ws.getCell(i + 2, col).value = a);
     const cl = columnLetter(col);
-    wb.definedNames.addEx({ name, ranges: [`Lookups!$${cl}$2:$${cl}$${areas.length + 1}`] });
+    wb.definedNames.add(`Lookups!$${cl}$2:$${cl}$${areas.length + 1}`, name);
     col++;
   }
 
@@ -151,7 +151,7 @@ function buildLookupsSheet(wb) {
     const products = PRODUCTS_BY_CATEGORY[cat];
     products.forEach((p, i) => ws.getCell(i + 2, col).value = p);
     const cl = columnLetter(col);
-    wb.definedNames.addEx({ name, ranges: [`Lookups!$${cl}$2:$${cl}$${products.length + 1}`] });
+    wb.definedNames.add(`Lookups!$${cl}$2:$${cl}$${products.length + 1}`, name);
     col++;
   }
 
