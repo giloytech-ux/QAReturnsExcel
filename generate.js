@@ -251,6 +251,84 @@ function buildDataEntrySheet(wb) {
   return ws;
 }
 
+// ── Tray Entry Form Sheet (mobile-friendly vertical layout) ─────────────────
+
+function buildTrayEntrySheet(wb) {
+  const ws = wb.addWorksheet("Tray Entry");
+
+  ws.getColumn(1).width = 22;
+  ws.getColumn(2).width = 36;
+
+  // Title
+  ws.mergeCells("A1:B1");
+  ws.getCell("A1").value = "Tray Returns Entry";
+  ws.getCell("A1").font = { bold: true, size: 18, color: { argb: "FF1F4E79" } };
+  ws.getCell("A1").alignment = { vertical: "middle" };
+  ws.getRow(1).height = 42;
+
+  // Subtitle
+  ws.mergeCells("A2:B2");
+  ws.getCell("A2").value = "Fill in the fields below, then run the Submit macro (Alt+F8).";
+  ws.getCell("A2").font = { size: 11, italic: true, color: { argb: "FF666666" } };
+  ws.getRow(2).height = 22;
+
+  const fields = [
+    { label: "Route", row: 4, validation: { type: "list", formulae: ["Routes"] } },
+    { label: "Area", row: 5, validation: { type: "list", formulae: ['INDIRECT("Route_"&SUBSTITUTE(B4," ","_"))'] } },
+    { label: "Tray Count", row: 6, validation: { type: "whole", operator: "greaterThanOrEqual", formulae: [0] } },
+    { label: "Date Returned", row: 7, isDate: true },
+    { label: "Inspector", row: 8, validation: { type: "list", formulae: ["Users"] } },
+  ];
+
+  for (const f of fields) {
+    const r = f.row;
+    ws.getRow(r).height = ROW_HEIGHT;
+
+    ws.getCell(r, 1).value = f.label;
+    ws.getCell(r, 1).font = LABEL_FONT;
+    ws.getCell(r, 1).alignment = { vertical: "middle" };
+
+    const inputCell = ws.getCell(r, 2);
+    inputCell.border = INPUT_BORDER;
+    inputCell.fill = INPUT_FILL;
+    inputCell.font = INPUT_FONT;
+    inputCell.alignment = { vertical: "middle" };
+
+    if (f.isDate) inputCell.numFmt = DATE_FMT;
+
+    if (f.validation) {
+      inputCell.dataValidation = {
+        ...f.validation,
+        allowBlank: true,
+        showErrorMessage: true,
+        errorTitle: "Invalid",
+        error: `Please enter a valid ${f.label}.`,
+      };
+    }
+  }
+
+  // Spacer row
+  ws.getRow(9).height = 10;
+
+  // Submit instruction row
+  ws.mergeCells("A10:B10");
+  ws.getCell("A10").value = 'Run macro "SubmitTrayReturn" to add this entry (Alt+F8)';
+  ws.getCell("A10").font = { bold: true, size: 13, color: { argb: "FFFFFFFF" } };
+  ws.getCell("A10").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E7D32" } };
+  ws.getCell("A10").alignment = { vertical: "middle", horizontal: "center" };
+  ws.getCell("A10").border = INPUT_BORDER;
+  ws.getCell("B10").border = INPUT_BORDER;
+  ws.getRow(10).height = 40;
+
+  // Status display
+  ws.mergeCells("A12:B12");
+  ws.getCell("A12").value = "";
+  ws.getCell("A12").font = { size: 12, bold: true, color: { argb: "FF2E7D32" } };
+  ws.getCell("A12").alignment = { horizontal: "center" };
+
+  return ws;
+}
+
 // ── Product Returns Sheet ───────────────────────────────────────────────────
 
 function buildProductReturnsSheet(wb) {
@@ -632,9 +710,10 @@ function buildVbaCodeSheet(wb) {
 function getVbaCode() {
   return `' ============================================================
 ' QA Returns — VBA Macros
-' Contains two macros:
+' Contains three macros:
 '   1) SubmitProductReturn  — adds Data Entry form to Product Returns
-'   2) GenerateSensoryReport — generates Sensory Evaluation report
+'   2) SubmitTrayReturn     — adds Tray Entry form to Tray Returns
+'   3) GenerateSensoryReport — generates Sensory Evaluation report
 ' ============================================================
 
 Sub SubmitProductReturn()
@@ -747,6 +826,81 @@ Sub SubmitProductReturn()
     wsForm.Range("B4").Select
 
     MsgBox "Record added as row " & nextRow & " in Product Returns!", vbInformation
+End Sub
+
+' ============================================================
+
+Sub SubmitTrayReturn()
+    Dim wsForm As Worksheet
+    Dim wsTR As Worksheet
+
+    Set wsForm = ThisWorkbook.Sheets("Tray Entry")
+    Set wsTR = ThisWorkbook.Sheets("Tray Returns")
+
+    ' ── Read form values ──
+    Dim fRoute As String:       fRoute = Trim(CStr(wsForm.Range("B4").Value))
+    Dim fArea As String:        fArea = Trim(CStr(wsForm.Range("B5").Value))
+    Dim fTrayCount As Variant:  fTrayCount = wsForm.Range("B6").Value
+    Dim fReturned As Variant:   fReturned = wsForm.Range("B7").Value
+    Dim fInspector As String:   fInspector = Trim(CStr(wsForm.Range("B8").Value))
+
+    ' ── Validate required fields ──
+    If fRoute = "" Then
+        MsgBox "Route is required.", vbExclamation
+        wsForm.Range("B4").Select
+        Exit Sub
+    End If
+    If fArea = "" Then
+        MsgBox "Area is required.", vbExclamation
+        wsForm.Range("B5").Select
+        Exit Sub
+    End If
+    If Not IsNumeric(fTrayCount) Or CLng(fTrayCount) < 0 Then
+        MsgBox "Tray Count must be a number >= 0.", vbExclamation
+        wsForm.Range("B6").Select
+        Exit Sub
+    End If
+    If fInspector = "" Then
+        MsgBox "Inspector is required.", vbExclamation
+        wsForm.Range("B8").Select
+        Exit Sub
+    End If
+
+    ' ── Find next empty row in Tray Returns (check col C = Route) ──
+    Dim nextRow As Long
+    nextRow = 2
+    Dim i As Long
+    For i = 2 To 501
+        If wsTR.Cells(i, 3).Value <> "" Then
+            nextRow = i + 1
+        End If
+    Next i
+
+    If nextRow > 501 Then
+        MsgBox "Tray Returns sheet is full (500 rows).", vbExclamation
+        Exit Sub
+    End If
+
+    ' ── Write data to Tray Returns ──
+    ' Col A (Record #) and Col B (Date Inspected) have formulas already
+    wsTR.Cells(nextRow, 3).Value = fRoute
+    wsTR.Cells(nextRow, 4).Value = fArea
+    wsTR.Cells(nextRow, 5).Value = CLng(fTrayCount)
+    If IsDate(fReturned) Then wsTR.Cells(nextRow, 6).Value = CDate(fReturned)
+    wsTR.Cells(nextRow, 7).Value = fInspector
+
+    ' ── Clear form ──
+    wsForm.Range("B4").Value = ""
+    wsForm.Range("B5").Value = ""
+    wsForm.Range("B6").Value = ""
+    wsForm.Range("B7").Value = ""
+    wsForm.Range("B8").Value = ""
+
+    ' ── Show confirmation ──
+    wsForm.Range("A12").Value = "Record #" & (nextRow - 1) & " added successfully!"
+    wsForm.Range("B4").Select
+
+    MsgBox "Tray record added as row " & nextRow & " in Tray Returns!", vbInformation
 End Sub
 
 ' ============================================================
@@ -1104,7 +1258,8 @@ async function main() {
   wb.created = new Date();
 
   buildLookupsSheet(wb);
-  buildDataEntrySheet(wb);    // ← first sheet users see
+  buildDataEntrySheet(wb);    // ← Product Returns form
+  buildTrayEntrySheet(wb);    // ← Tray Returns form
   buildProductReturnsSheet(wb);
   buildTrayReturnsSheet(wb);
   buildSummarySheet(wb);
