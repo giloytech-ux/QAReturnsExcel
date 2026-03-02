@@ -444,6 +444,22 @@ function buildProductReturnsSheet(wb) {
     }
   }
 
+  // Unlock all cells except Created At (col 16), then protect sheet
+  for (let r = firstDataRow; r <= lastDataRow; r++) {
+    for (let c = 1; c <= headers.length; c++) {
+      ws.getCell(r, c).protection = { locked: c === 16 };
+    }
+  }
+  ws.protect("qaReturns2026", {
+    selectLockedCells: true,
+    selectUnlockedCells: true,
+    formatCells: true,
+    formatColumns: true,
+    formatRows: true,
+    sort: true,
+    autoFilter: true,
+  });
+
   return ws;
 }
 
@@ -497,6 +513,22 @@ function buildTrayReturnsSheet(wb) {
       }
     }
   }
+
+  // Unlock all cells except Created At (col 8), then protect sheet
+  for (let r = firstDataRow; r <= lastDataRow; r++) {
+    for (let c = 1; c <= headers.length; c++) {
+      ws.getCell(r, c).protection = { locked: c === 8 };
+    }
+  }
+  ws.protect("qaReturns2026", {
+    selectLockedCells: true,
+    selectUnlockedCells: true,
+    formatCells: true,
+    formatColumns: true,
+    formatRows: true,
+    sort: true,
+    autoFilter: true,
+  });
 
   return ws;
 }
@@ -797,6 +829,7 @@ Sub SubmitProductReturn()
     End If
 
     ' ── Write data to Product Returns ──
+    wsPR.Unprotect "qaReturns2026"
     ' Col A (Record #) and Col B (Date Inspected) have formulas already
     wsPR.Cells(nextRow, 3).Value = fRoute
     wsPR.Cells(nextRow, 4).Value = fArea
@@ -813,6 +846,7 @@ Sub SubmitProductReturn()
     wsPR.Cells(nextRow, 15).Value = fInspector
     wsPR.Cells(nextRow, 16).Value = Now
     wsPR.Cells(nextRow, 16).NumberFormat = "DD MMM YYYY HH:MM"
+    wsPR.Protect "qaReturns2026", True, True, True
 
     ' ── Clear form ──
     wsForm.Range("B4").Value = ""
@@ -890,6 +924,7 @@ Sub SubmitTrayReturn()
     End If
 
     ' ── Write data to Tray Returns ──
+    wsTR.Unprotect "qaReturns2026"
     ' Col A (Record #) and Col B (Date Inspected) have formulas already
     wsTR.Cells(nextRow, 3).Value = fRoute
     wsTR.Cells(nextRow, 4).Value = fArea
@@ -898,6 +933,7 @@ Sub SubmitTrayReturn()
     wsTR.Cells(nextRow, 7).Value = fInspector
     wsTR.Cells(nextRow, 8).Value = Now
     wsTR.Cells(nextRow, 8).NumberFormat = "DD MMM YYYY HH:MM"
+    wsTR.Protect "qaReturns2026", True, True, True
 
     ' ── Clear form ──
     wsForm.Range("B4").Value = ""
