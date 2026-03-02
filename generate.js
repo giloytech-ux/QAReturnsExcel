@@ -35,11 +35,11 @@ const DESCRIPTIONS = [
 ];
 
 const SEED_PRODUCT_RETURNS = [
-  { route: "City", area: "LMP1", category: "Loaf", product: "ML", qty: 5, batch: "B2026-0220", prodDate: new Date(2026, 1, 20), expiryDate: new Date(2026, 1, 27), dateReturned: new Date(2026, 1, 26), description: "Molds", otherDesc: "", notes: "Visible green mold on crust. Full batch affected.", inspector: "Marcus Chen" },
-  { route: "Out of Town", area: "Boracay", category: "Loaf", product: "JW", qty: 12, batch: "B2026-0222", prodDate: new Date(2026, 1, 22), expiryDate: new Date(2026, 2, 1), dateReturned: new Date(2026, 1, 26), description: "Good Condition", otherDesc: "", notes: "Overstock return. Product in good condition.", inspector: "Aisha Patel" },
-  { route: "Davao", area: "Davao", category: "Assorted", product: "BCR", qty: 8, batch: "", prodDate: new Date(2026, 1, 18), expiryDate: new Date(2026, 1, 25), dateReturned: new Date(2026, 1, 25), description: "Dry Crumb", otherDesc: "", notes: "Past expiry by 1 day at time of return.", inspector: "Marcus Chen" },
-  { route: "City", area: "LGMV", category: "Loaf", product: "AL", qty: 3, batch: "B2026-0224", prodDate: new Date(2026, 1, 24), expiryDate: new Date(2026, 2, 3), dateReturned: new Date(2026, 1, 27), description: "Damaged Wrapper", otherDesc: "", notes: "Packaging torn. Loaves crushed during transit.", inspector: "Aisha Patel" },
-  { route: "Out of Town", area: "Guimaras", category: "Loaf", product: "SP", qty: 6, batch: "B2026-0221", prodDate: new Date(2026, 1, 21), expiryDate: new Date(2026, 1, 28), dateReturned: new Date(2026, 1, 27), description: "Good Condition", otherDesc: "", notes: "Area overstocked. All units in sellable condition.", inspector: "Marcus Chen" },
+  { route: "City", area: "LMP1", category: "Loaf", product: "ML", qty: 5, batch: "B2026-0220", prodDate: new Date(2026, 1, 20), expiryDate: new Date(2026, 1, 27), dateReturned: new Date(2026, 1, 26), description: "Molds", otherDesc: "", notes: "Visible green mold on crust. Full batch affected.", inspector: "Marcus Chen", createdAt: new Date(2026, 1, 27, 8, 15) },
+  { route: "Out of Town", area: "Boracay", category: "Loaf", product: "JW", qty: 12, batch: "B2026-0222", prodDate: new Date(2026, 1, 22), expiryDate: new Date(2026, 2, 1), dateReturned: new Date(2026, 1, 26), description: "Good Condition", otherDesc: "", notes: "Overstock return. Product in good condition.", inspector: "Aisha Patel", createdAt: new Date(2026, 1, 26, 14, 30) },
+  { route: "Davao", area: "Davao", category: "Assorted", product: "BCR", qty: 8, batch: "", prodDate: new Date(2026, 1, 18), expiryDate: new Date(2026, 1, 25), dateReturned: new Date(2026, 1, 25), description: "Dry Crumb", otherDesc: "", notes: "Past expiry by 1 day at time of return.", inspector: "Marcus Chen", createdAt: new Date(2026, 1, 25, 10, 0) },
+  { route: "City", area: "LGMV", category: "Loaf", product: "AL", qty: 3, batch: "B2026-0224", prodDate: new Date(2026, 1, 24), expiryDate: new Date(2026, 2, 3), dateReturned: new Date(2026, 1, 27), description: "Damaged Wrapper", otherDesc: "", notes: "Packaging torn. Loaves crushed during transit.", inspector: "Aisha Patel", createdAt: new Date(2026, 1, 27, 9, 45) },
+  { route: "Out of Town", area: "Guimaras", category: "Loaf", product: "SP", qty: 6, batch: "B2026-0221", prodDate: new Date(2026, 1, 21), expiryDate: new Date(2026, 1, 28), dateReturned: new Date(2026, 1, 27), description: "Good Condition", otherDesc: "", notes: "Area overstocked. All units in sellable condition.", inspector: "Marcus Chen", createdAt: new Date(2026, 1, 27, 11, 20) },
 ];
 
 const DATA_ROWS = 500;
@@ -350,6 +350,7 @@ function buildProductReturnsSheet(wb) {
     { header: "Other Description", key: "otherDesc", width: 20 },
     { header: "Notes", key: "notes", width: 26 },
     { header: "Inspector", key: "inspector", width: 20 },
+    { header: "Created At", key: "createdAt", width: 20 },
   ];
 
   ws.columns = headers;
@@ -379,6 +380,8 @@ function buildProductReturnsSheet(wb) {
     ws.getCell(r, 13).value = rec.otherDesc;
     ws.getCell(r, 14).value = rec.notes;
     ws.getCell(r, 15).value = rec.inspector;
+    ws.getCell(r, 16).value = rec.createdAt;
+    ws.getCell(r, 16).numFmt = "DD MMM YYYY HH:MM";
   });
 
   // Empty rows with formulas
@@ -395,6 +398,7 @@ function buildProductReturnsSheet(wb) {
     ws.getCell(r, 9).numFmt = DATE_FMT;
     ws.getCell(r, 10).numFmt = DATE_FMT;
     ws.getCell(r, 11).numFmt = DATE_FMT;
+    ws.getCell(r, 16).numFmt = "DD MMM YYYY HH:MM";
     ws.getRow(r).height = ROW_HEIGHT;
   }
 
@@ -456,6 +460,7 @@ function buildTrayReturnsSheet(wb) {
     { header: "Tray Count", key: "trayCount", width: 13 },
     { header: "Date Returned", key: "dateReturned", width: 17 },
     { header: "Inspector", key: "inspector", width: 20 },
+    { header: "Created At", key: "createdAt", width: 20 },
   ];
 
   ws.columns = headers;
@@ -471,6 +476,7 @@ function buildTrayReturnsSheet(wb) {
     ws.getCell(r, 2).value = { formula: `IF(C${r}<>"",TODAY(),"")` };
     ws.getCell(r, 2).numFmt = DATE_FMT;
     ws.getCell(r, 6).numFmt = DATE_FMT;
+    ws.getCell(r, 8).numFmt = "DD MMM YYYY HH:MM";
     ws.getRow(r).height = ROW_HEIGHT;
   }
 
@@ -805,6 +811,8 @@ Sub SubmitProductReturn()
     wsPR.Cells(nextRow, 13).Value = fOtherDesc
     wsPR.Cells(nextRow, 14).Value = fNotes
     wsPR.Cells(nextRow, 15).Value = fInspector
+    wsPR.Cells(nextRow, 16).Value = Now
+    wsPR.Cells(nextRow, 16).NumberFormat = "DD MMM YYYY HH:MM"
 
     ' ── Clear form ──
     wsForm.Range("B4").Value = ""
@@ -888,6 +896,8 @@ Sub SubmitTrayReturn()
     wsTR.Cells(nextRow, 5).Value = CLng(fTrayCount)
     If IsDate(fReturned) Then wsTR.Cells(nextRow, 6).Value = CDate(fReturned)
     wsTR.Cells(nextRow, 7).Value = fInspector
+    wsTR.Cells(nextRow, 8).Value = Now
+    wsTR.Cells(nextRow, 8).NumberFormat = "DD MMM YYYY HH:MM"
 
     ' ── Clear form ──
     wsForm.Range("B4").Value = ""
@@ -963,12 +973,13 @@ Sub GenerateSensoryReport()
     Dim filtCount As Long
     filtCount = 0
 
+    ' Filter by Created At (col 16) using full date+time comparison
     For i = 2 To lastRowPR
         If CStr(wsPR.Cells(i, 3).Value) = selRoute Then
-            Dim inspDate As Date
-            If IsDate(wsPR.Cells(i, 2).Value) Then
-                inspDate = CDate(wsPR.Cells(i, 2).Value)
-                If inspDate >= Int(startDT) And inspDate <= Int(endDT) Then
+            Dim createdDT As Date
+            If IsDate(wsPR.Cells(i, 16).Value) Then
+                createdDT = CDate(wsPR.Cells(i, 16).Value)
+                If createdDT >= startDT And createdDT <= endDT Then
                     filtCount = filtCount + 1
                 End If
             End If
@@ -989,9 +1000,9 @@ Sub GenerateSensoryReport()
     fi = 0
     For i = 2 To lastRowPR
         If CStr(wsPR.Cells(i, 3).Value) = selRoute Then
-            If IsDate(wsPR.Cells(i, 2).Value) Then
-                inspDate = CDate(wsPR.Cells(i, 2).Value)
-                If inspDate >= Int(startDT) And inspDate <= Int(endDT) Then
+            If IsDate(wsPR.Cells(i, 16).Value) Then
+                createdDT = CDate(wsPR.Cells(i, 16).Value)
+                If createdDT >= startDT And createdDT <= endDT Then
                     fi = fi + 1
                     filteredRows(fi) = i
                 End If
@@ -1002,12 +1013,13 @@ Sub GenerateSensoryReport()
     ' ── Build tray count lookup ──
     Dim trayDict As Object
     Set trayDict = CreateObject("Scripting.Dictionary")
+    ' Filter tray returns by Created At (col 8) using full date+time
     For i = 2 To lastRowTR
         If CStr(wsTR.Cells(i, 3).Value) = selRoute Then
-            Dim trayInspDate As Date
-            If IsDate(wsTR.Cells(i, 2).Value) Then
-                trayInspDate = CDate(wsTR.Cells(i, 2).Value)
-                If trayInspDate >= Int(startDT) And trayInspDate <= Int(endDT) Then
+            Dim trayCreatedDT As Date
+            If IsDate(wsTR.Cells(i, 8).Value) Then
+                trayCreatedDT = CDate(wsTR.Cells(i, 8).Value)
+                If trayCreatedDT >= startDT And trayCreatedDT <= endDT Then
                     Dim tArea As String
                     tArea = CStr(wsTR.Cells(i, 4).Value)
                     If tArea <> "" Then
@@ -1118,9 +1130,9 @@ Sub GenerateSensoryReport()
         Next fi
         For i = 2 To lastRowTR
             If CStr(wsTR.Cells(i, 3).Value) = selRoute And CStr(wsTR.Cells(i, 4).Value) = curArea Then
-                If IsDate(wsTR.Cells(i, 2).Value) Then
-                    trayInspDate = CDate(wsTR.Cells(i, 2).Value)
-                    If trayInspDate >= Int(startDT) And trayInspDate <= Int(endDT) Then
+                If IsDate(wsTR.Cells(i, 8).Value) Then
+                    trayCreatedDT = CDate(wsTR.Cells(i, 8).Value)
+                    If trayCreatedDT >= startDT And trayCreatedDT <= endDT Then
                         Dim tiName As String
                         tiName = CStr(wsTR.Cells(i, 7).Value)
                         If tiName <> "" And Not inspDict.Exists(tiName) Then inspDict.Add tiName, True
