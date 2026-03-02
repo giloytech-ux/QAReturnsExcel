@@ -155,6 +155,17 @@ function buildLookupsSheet(wb) {
     col++;
   }
 
+  // Time values — every 30 minutes (48 entries)
+  ws.getCell(1, col).value = "Times";
+  const timeCount = 48;
+  for (let t = 0; t < timeCount; t++) {
+    const cell = ws.getCell(t + 2, col);
+    cell.value = t / 48;           // fractional day value (0 = 12:00 AM, 0.5 = 12:00 PM)
+    cell.numFmt = "h:mm AM/PM";
+  }
+  const tcl = columnLetter(col);
+  wb.definedNames.add(`Lookups!$${tcl}$2:$${tcl}$${timeCount + 1}`, "Times");
+
   return ws;
 }
 
@@ -188,9 +199,9 @@ function buildDataEntrySheet(wb) {
     { label: "Product", row: 7, validation: { type: "list", formulae: ['INDIRECT("Cat_"&SUBSTITUTE(B6," ","_"))'] } },
     { label: "Qty (Packs)", row: 8, validation: { type: "whole", operator: "greaterThanOrEqual", formulae: [1] } },
     { label: "Batch #", row: 9 },
-    { label: "Production Date", row: 10, isDate: true },
-    { label: "Expiry Date", row: 11, isDate: true },
-    { label: "Date Returned", row: 12, isDate: true },
+    { label: "Production Date", row: 10, isDate: true, dateValidation: true },
+    { label: "Expiry Date", row: 11, isDate: true, dateValidation: true },
+    { label: "Date Returned", row: 12, isDate: true, dateValidation: true },
     { label: "Description", row: 13, validation: { type: "list", formulae: ["Descriptions"] } },
     { label: "Other Description", row: 14 },
     { label: "Notes", row: 15 },
@@ -217,7 +228,20 @@ function buildDataEntrySheet(wb) {
       inputCell.numFmt = DATE_FMT;
     }
 
-    if (f.validation) {
+    if (f.dateValidation) {
+      inputCell.dataValidation = {
+        type: "date",
+        operator: "greaterThan",
+        allowBlank: true,
+        formulae: [new Date(2020, 0, 1)],
+        showInputMessage: true,
+        promptTitle: f.label,
+        prompt: "Enter a date (e.g. 15 Mar 2026)",
+        showErrorMessage: true,
+        errorTitle: "Invalid Date",
+        error: "Please enter a valid date.",
+      };
+    } else if (f.validation) {
       inputCell.dataValidation = {
         ...f.validation,
         allowBlank: true,
@@ -276,7 +300,7 @@ function buildTrayEntrySheet(wb) {
     { label: "Route", row: 4, validation: { type: "list", formulae: ["Routes"] } },
     { label: "Area", row: 5, validation: { type: "list", formulae: ['INDIRECT("Route_"&SUBSTITUTE(B4," ","_"))'] } },
     { label: "Tray Count", row: 6, validation: { type: "whole", operator: "greaterThanOrEqual", formulae: [0] } },
-    { label: "Date Returned", row: 7, isDate: true },
+    { label: "Date Returned", row: 7, isDate: true, dateValidation: true },
     { label: "Inspector", row: 8, validation: { type: "list", formulae: ["Users"] } },
   ];
 
@@ -296,7 +320,20 @@ function buildTrayEntrySheet(wb) {
 
     if (f.isDate) inputCell.numFmt = DATE_FMT;
 
-    if (f.validation) {
+    if (f.dateValidation) {
+      inputCell.dataValidation = {
+        type: "date",
+        operator: "greaterThan",
+        allowBlank: true,
+        formulae: [new Date(2020, 0, 1)],
+        showInputMessage: true,
+        promptTitle: f.label,
+        prompt: "Enter a date (e.g. 15 Mar 2026)",
+        showErrorMessage: true,
+        errorTitle: "Invalid Date",
+        error: "Please enter a valid date.",
+      };
+    } else if (f.validation) {
       inputCell.dataValidation = {
         ...f.validation,
         allowBlank: true,
@@ -662,16 +699,26 @@ function buildReportGeneratorSheet(wb) {
   ws.getCell("B5").border = INPUT_BORDER;
   ws.getCell("B5").fill = INPUT_FILL;
   ws.getCell("B5").font = INPUT_FONT;
+  ws.getCell("B5").dataValidation = {
+    type: "date", operator: "greaterThan", allowBlank: false,
+    formulae: [new Date(2020, 0, 1)],
+    showInputMessage: true, promptTitle: "Start Date", prompt: "Enter a date (e.g. 15 Mar 2026)",
+    showErrorMessage: true, errorTitle: "Invalid Date", error: "Please enter a valid date.",
+  };
   ws.getRow(5).height = ROW_HEIGHT;
 
   // Start Time
   ws.getCell("A6").value = "Start Time:";
   ws.getCell("A6").font = LABEL_FONT;
   ws.getCell("B6").value = 0;
-  ws.getCell("B6").numFmt = "HH:MM";
+  ws.getCell("B6").numFmt = "h:mm AM/PM";
   ws.getCell("B6").border = INPUT_BORDER;
   ws.getCell("B6").fill = INPUT_FILL;
   ws.getCell("B6").font = INPUT_FONT;
+  ws.getCell("B6").dataValidation = {
+    type: "list", allowBlank: false, formulae: ["Times"],
+    showErrorMessage: true, errorTitle: "Invalid", error: "Select a time from the list.",
+  };
   ws.getRow(6).height = ROW_HEIGHT;
 
   // End Date
@@ -682,16 +729,26 @@ function buildReportGeneratorSheet(wb) {
   ws.getCell("B8").border = INPUT_BORDER;
   ws.getCell("B8").fill = INPUT_FILL;
   ws.getCell("B8").font = INPUT_FONT;
+  ws.getCell("B8").dataValidation = {
+    type: "date", operator: "greaterThan", allowBlank: false,
+    formulae: [new Date(2020, 0, 1)],
+    showInputMessage: true, promptTitle: "End Date", prompt: "Enter a date (e.g. 15 Mar 2026)",
+    showErrorMessage: true, errorTitle: "Invalid Date", error: "Please enter a valid date.",
+  };
   ws.getRow(8).height = ROW_HEIGHT;
 
   // End Time
   ws.getCell("A9").value = "End Time:";
   ws.getCell("A9").font = LABEL_FONT;
-  ws.getCell("B9").value = 0.9999;
-  ws.getCell("B9").numFmt = "HH:MM";
+  ws.getCell("B9").value = 47/48;
+  ws.getCell("B9").numFmt = "h:mm AM/PM";
   ws.getCell("B9").border = INPUT_BORDER;
   ws.getCell("B9").fill = INPUT_FILL;
   ws.getCell("B9").font = INPUT_FONT;
+  ws.getCell("B9").dataValidation = {
+    type: "list", allowBlank: false, formulae: ["Times"],
+    showErrorMessage: true, errorTitle: "Invalid", error: "Select a time from the list.",
+  };
   ws.getRow(9).height = ROW_HEIGHT;
 
   // Generate instruction
