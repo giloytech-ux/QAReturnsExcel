@@ -1,0 +1,11 @@
+{
+  "name": "qa-returns-excel",
+  "version": "1.0.0",
+  "description": "Generates a standalone QA Returns Excel workbook",
+  "scripts": {
+    "generate": "node generate.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}
