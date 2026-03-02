@@ -116,7 +116,7 @@ function columnLetter(num) {
 // ── Lookups Sheet ───────────────────────────────────────────────────────────
 
 function buildLookupsSheet(wb) {
-  const ws = wb.addWorksheet("Lookups", { state: "veryHidden" });
+  const ws = wb.addWorksheet("Lookups", { state: "hidden" });
 
   ws.getCell("A1").value = "Routes";
   ROUTES.forEach((r, i) => ws.getCell(i + 2, 1).value = r);
